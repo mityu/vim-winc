@@ -1,5 +1,5 @@
 vim9script noclear
-# Requires Vim >= 9.0.1662 at least.  (Maybe much higher version is required.)
+# Requires Vim >= 9.0.2167.
 
 var FuncWrapper: func(): void
 
@@ -46,29 +46,29 @@ def IsValidRegexp(regexp: string): bool
 enddef
 
 class SearchState
-  public this.searchFlags: string
-  public this.searchFlagsTurn: string
-  public this.cursorLine: number
-  public this.bottomLine: number
-  public this.initialCursorPos: list<number>
-  public this.wrapscan: bool
+  public var searchFlags: string
+  public var searchFlagsTurn: string
+  public var cursorLine: number
+  public var bottomLine: number
+  public var initialCursorPos: list<number>
+  public var wrapscan: bool
 endclass
 
 class CmdKind
-  static None = 0
-  static Others = 1
-  static Substitute = 2
-  static Smagic = 3
-  static Snomagic = 4
-  static Global = 5
-  static Vglobal = 6
-  static Vimgrep = 7
-  static Lvimgrep = 8
-  static Vimgrepadd = 9
-  static Lvimgrepadd = 10
-  static Sort = 11
+  static var None = 0
+  static var Others = 1
+  static var Substitute = 2
+  static var Smagic = 3
+  static var Snomagic = 4
+  static var Global = 5
+  static var Vglobal = 6
+  static var Vimgrep = 7
+  static var Lvimgrep = 8
+  static var Vimgrepadd = 9
+  static var Lvimgrepadd = 10
+  static var Sort = 11
 
-  this.value: number
+  var value: number
 
   def new(value: number)
     this.value = value
@@ -97,19 +97,19 @@ class CmdKind
 endclass
 
 class CmdState
-  public this.range1: string
-  public this.range2: string
-  public this.pattern: string
-  public this.command: CmdKind
+  public var range1: string
+  public var range2: string
+  public var pattern: string
+  public var command: CmdKind
 endclass
 
 class Parser
-  static PATTERN_COMMAND_PARSER  = GenerateCommandParser()
+  static var PATTERN_COMMAND_PARSER  = GenerateCommandParser()
 
-  static MethodOnSearch = 1
-  static MethodOnCommand = 2
+  static var MethodOnSearch = 1
+  static var MethodOnCommand = 2
 
-  this.Parser: func(string): CmdState
+  var Parser: func(string): CmdState
 
   def new(method: number)
     if method == MethodOnSearch
@@ -187,10 +187,10 @@ class Parser
 endclass
 
 class Highlighter
-  this.winID: number
-  this.bufnr: number
-  this.winlist: list<number>
-  this.matchIDs: list<list<number>>
+  var winID: number
+  var bufnr: number
+  var winlist: list<number>
+  var matchIDs: list<list<number>>
 
   def new(winID: number)
     this.winID = winID
@@ -223,14 +223,14 @@ class Highlighter
 endclass
 
 class Winc
-  static DoIncsearchExec: func()
-  static TerminateExec: func()
+  static var DoIncsearchExec: func()
+  static var TerminateExec: func()
 
-  this._winID: number
-  this._initialCurPos: list<number>
-  this._restoreCurPosFunc: func(): void
-  this._highlighter: Highlighter
-  this._parser: Parser
+  var _winID: number
+  var _initialCurPos: list<number>
+  var _restoreCurPosFunc: func(): void
+  var _highlighter: Highlighter
+  var _parser: Parser
 
   def new()
     const cmdwintype = getcmdwintype()
