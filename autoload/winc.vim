@@ -231,6 +231,7 @@ class Winc
   var _restoreCurPosFunc: func(): void
   var _highlighter: Highlighter
   var _parser: Parser
+  var _searchForward: bool
 
   def new()
     const cmdwintype = getcmdwintype()
@@ -246,6 +247,7 @@ class Winc
     this._highlighter = Highlighter.new(this._winID)
     this._parser = Parser.new(
       cmdwintype ==# ':' ? Parser.MethodOnCommand : Parser.MethodOnSearch)
+    this._searchForward = cmdwintype !=# '?'
 
     DoIncsearchExec = () => this.DoIncsearch()
     TerminateExec = () => this.Terminate()
@@ -261,6 +263,7 @@ class Winc
       autocmd!
     augroup END
     this._highlighter.ClearHighlight()
+    this.CallInWindow(this._restoreCurPosFunc)
   enddef
 
   def DoIncsearch()
@@ -274,6 +277,39 @@ class Winc
     # TODO: Support [count] argument of :substitute
     const [line1, line2] = this.EvalRegion(cmdState)
     this._highlighter.Highlight(line1, line2, cmdState.pattern)
+
+    # TODO: Consider ignorecase, smartcase, etc.
+    # TODO: Highlight first match.
+    const changeSearchStartPos = cmdState.command.value != CmdKind.None
+    const searchflags = this._searchForward ? 'c' : 'cbz'
+    var stopline = 0
+
+    if changeSearchStartPos
+      if this._searchForward
+        this.EvalInWindow(() => cursor(line1, 0))
+        stopline = line2
+      else
+        this.EvalInWindow(() => execute($'keepjumps normal! {line2}G$'))
+        stopline = line1
+      endif
+    endif
+
+    const matchedline = this.EvalInWindow(() =>
+      search(cmdState.pattern, searchflags, stopline, 500))
+    if matchedline != 0
+      if matchedline < line('w0', this._winID) || matchedline > line('w$', this._winID)
+        this.EvalInWindow(() => execute('normal! zz'))
+      endif
+      redraw
+    elseif changeSearchStartPos
+      # If there's no match and cursor position is changed above, restore
+      # cursor position.
+      this.CallInWindow(this._restoreCurPosFunc)
+    endif
+
+    # TODO: Restore view if changed.
+    # if getcurpos() == this._initialCurPos
+    # endif
   enddef
 
   # Evaluate region string, such as %, '< and '>, into line numbers.
