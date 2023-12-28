@@ -228,6 +228,7 @@ class Winc
 
   var _winID: number
   var _initialCurPos: list<number>
+  var _initialFirstline: number
   var _restoreCurPosFunc: func(): void
   var _highlighter: Highlighter
   var _parser: Parser
@@ -241,8 +242,17 @@ class Winc
 
     this._winID = win_getid(winnr('#'))
     this._initialCurPos = getcurpos(this._winID)
+    this._initialFirstline = this.Line('w0')
     this._restoreCurPosFunc = () => {
       setpos('.', this._initialCurPos)
+      const firstline = this.Line('w0')
+      normal! zz
+      while this.Line('w0') > this._initialFirstline
+        execute "normal! \<C-y>"
+      endwhile
+      while this.Line('w0') < this._initialFirstline
+        execute "normal! \<C-e>"
+      endwhile
     }
     this._highlighter = Highlighter.new(this._winID)
     this._parser = Parser.new(
