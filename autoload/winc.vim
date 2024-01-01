@@ -129,7 +129,7 @@ class Parser
     var s = CmdState.new()
     s.range1 = '%'
     s.range2 = ''
-    s.pattern = line
+    s.pattern = line->Parser._completeSearchOptions()
     s.command = CmdKind.new(CmdKind.None)
     return s
   enddef
@@ -147,7 +147,7 @@ class Parser
       s.range1 = range1
       s.range2 = range2
       s.command = CmdKind.new(CmdKind.GetIdFromCmd(cmd))
-      s.pattern = Parser.ParseSurroundedPattern(arg)
+      s.pattern = Parser.ParseSurroundedPattern(arg)->Parser._completeSearchOptions()
       return s
     else
       return null_object
@@ -183,6 +183,21 @@ class Parser
       return @/
     endif
     return extracted->substitute(nonEscapedDelimiter, '', 'g') # \/ -> /
+  enddef
+
+  static def _completeSearchOptions(patternGiven: string): string
+    if !IsValidRegexp(patternGiven)
+      return patternGiven
+    endif
+
+    # TODO: Also consider smartcase, magic, etc.
+    var pattern = patternGiven
+    if &ignorecase
+      pattern = '\c' .. pattern
+    else
+      pattern = '\C' .. pattern
+    endif
+    return pattern
   enddef
 endclass
 
@@ -288,7 +303,6 @@ class Winc
     const [line1, line2] = this.EvalRegion(cmdState)
     this._highlighter.Highlight(line1, line2, cmdState.pattern)
 
-    # TODO: Consider ignorecase, smartcase, etc.
     # TODO: Highlight first match.
     const changeSearchStartPos = cmdState.command.value != CmdKind.None
     const searchflags = this._searchForward ? 'c' : 'cbz'
