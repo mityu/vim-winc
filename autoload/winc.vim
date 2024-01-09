@@ -218,6 +218,10 @@ class Highlighter
 
     var pattern = patternGiven
     if !(line1 == 1 && line('$', this.winID) == line2)
+      if pattern =~# '\\$' && !IsValidRegexp($'\%({pattern}\v)')
+        # Escape single backslash at the end of pattern to avoid E53 error.
+        pattern ..= '\'
+      endif
       pattern = $'\v%(%>{line1}l|%{line1}l)%(\m{pattern}\v)%(%<{line2}l|%{line2}l)'
     endif
 
