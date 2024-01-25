@@ -1,5 +1,5 @@
 vim9script noclear
-# Requires Vim >= 9.0.2167.
+# Requires Vim >= 9.0.2170.
 
 var FuncWrapper: func(): void
 
@@ -55,18 +55,18 @@ class SearchState
 endclass
 
 class CmdKind
-  static var None = 0
-  static var Others = 1
-  static var Substitute = 2
-  static var Smagic = 3
-  static var Snomagic = 4
-  static var Global = 5
-  static var Vglobal = 6
-  static var Vimgrep = 7
-  static var Lvimgrep = 8
-  static var Vimgrepadd = 9
-  static var Lvimgrepadd = 10
-  static var Sort = 11
+  static const None = 0
+  static const Others = 1
+  static const Substitute = 2
+  static const Smagic = 3
+  static const Snomagic = 4
+  static const Global = 5
+  static const Vglobal = 6
+  static const Vimgrep = 7
+  static const Lvimgrep = 8
+  static const Vimgrepadd = 9
+  static const Lvimgrepadd = 10
+  static const Sort = 11
 
   var value: number
 
