@@ -1,5 +1,5 @@
 vim9script noclear
-# Requires Vim >= 9.0.2170.
+# Requires Vim >= 9.1.0219.
 
 var FuncWrapper: func(): void
 
@@ -54,27 +54,21 @@ class SearchState
   public var wrapscan: bool
 endclass
 
-class CmdKind
-  static const None = 0
-  static const Others = 1
-  static const Substitute = 2
-  static const Smagic = 3
-  static const Snomagic = 4
-  static const Global = 5
-  static const Vglobal = 6
-  static const Vimgrep = 7
-  static const Lvimgrep = 8
-  static const Vimgrepadd = 9
-  static const Lvimgrepadd = 10
-  static const Sort = 11
+enum CmdKind
+  None,
+  Others,
+  Substitute,
+  Smagic,
+  Snomagic,
+  Global,
+  Vglobal,
+  Vimgrep,
+  Lvimgrep,
+  Vimgrepadd,
+  Lvimgrepadd,
+  Sort
 
-  var value: number
-
-  def new(value: number)
-    this.value = value
-  enddef
-
-  static def GetIdFromCmd(cmd: string): number
+  static def GetIdFromCmd(cmd: string): CmdKind
     const table = {
       ['s%[ubstitute]']: Substitute,
       ['sm%[agic]']: Smagic,
@@ -94,7 +88,7 @@ class CmdKind
     endfor
     return Others
   enddef
-endclass
+endenum
 
 class CmdState
   public var range1: string
@@ -130,7 +124,7 @@ class Parser
     s.range1 = '%'
     s.range2 = ''
     s.pattern = line->Parser._completeSearchOptions()
-    s.command = CmdKind.new(CmdKind.None)
+    s.command = CmdKind.None
     return s
   enddef
 
@@ -146,7 +140,7 @@ class Parser
       var s = CmdState.new()
       s.range1 = range1
       s.range2 = range2
-      s.command = CmdKind.new(CmdKind.GetIdFromCmd(cmd))
+      s.command = CmdKind.GetIdFromCmd(cmd)
       s.pattern = Parser.ParseSurroundedPattern(arg)->Parser._completeSearchOptions()
       return s
     else
@@ -308,7 +302,7 @@ class Winc
     this._highlighter.Highlight(line1, line2, cmdState.pattern)
 
     # TODO: Highlight first match.
-    const changeSearchStartPos = cmdState.command.value != CmdKind.None
+    const changeSearchStartPos = cmdState.command != CmdKind.None
     const searchflags = this._searchForward ? 'c' : 'cbz'
     var stopline = 0
 
@@ -364,7 +358,7 @@ class Winc
   def GetRegionWhenUnspecified(state: CmdState): list<number>
     # The current cursor line will be the target line except for the :global
     # command.
-    if state.command.value == CmdKind.Global
+    if state.command == CmdKind.Global
       return [1, this.Line('$')]
     else
       return [this.Line('.'), this.Line('.')]
@@ -442,9 +436,8 @@ enddef
 
 export def Internals_(): dict<any>
   return {
-    Parser: Parser,
-    Highlighter: Highlighter,
-    Winc: Winc,
-    CmdKind: CmdKind,
+    GetIdFromCmd: CmdKind.GetIdFromCmd,
+    SeparateCmdline: Parser.SeparateCmdline,
+    WincNew: () => Winc.new()
   }
 enddef
