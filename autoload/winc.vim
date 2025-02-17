@@ -180,13 +180,25 @@ class Parser
   enddef
 
   static def _completeSearchOptions(patternGiven: string): string
-    if !IsValidRegexp(patternGiven)
-      return patternGiven
+    # if !IsValidRegexp(patternGiven)
+    #   return patternGiven
+    # endif
+
+    var ignoreCase = &ignorecase
+    if &smartcase
+      if pattern =~# '\u'  # TODO: Is this truely right?
+        ignoreCase = true
+      endif
     endif
 
-    # TODO: Also consider smartcase, magic, etc.
     var pattern = patternGiven
-    if &ignorecase
+
+
+    if !&magic
+      pattern = '\M' .. pattern
+    endif
+
+    if ignoreCase
       pattern = '\c' .. pattern
     else
       pattern = '\C' .. pattern
