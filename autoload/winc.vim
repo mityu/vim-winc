@@ -179,9 +179,11 @@ class Parser
   enddef
 
   static def _completeSearchOptions(patternGiven: string): string
-    # if !IsValidRegexp(patternGiven)
-    #   return patternGiven
-    # endif
+    if !IsValidRegexp(patternGiven)
+      return patternGiven
+    endif
+
+    var pattern = patternGiven
 
     var ignoreCase = &ignorecase
     if &smartcase
@@ -189,9 +191,6 @@ class Parser
         ignoreCase = true
       endif
     endif
-
-    var pattern = patternGiven
-
 
     if !&magic
       pattern = '\M' .. pattern
