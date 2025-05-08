@@ -29,8 +29,7 @@ enddef
 def GenerateCommandParser(): string
   const rangeSpacifier = GenerateRangeSpecifierPattern()
   const rangeDelimiter = '\s*[,;]\s*'
-  return printf('\v^\s*%%((%s)%%(%s(%s))?)?\s*(\a+)\s*(!?)\s*(.*)',
-    rangeSpacifier, rangeDelimiter, rangeSpacifier)
+  return $'\v^\s*%(({rangeSpacifier})%({rangeDelimiter}({rangeSpacifier}))?)?\s*(\a+)\s*(!?)\s*(.*)'
 enddef
 
 def IsValidRegexp(regexp: string): bool
@@ -176,7 +175,7 @@ class Parser
     if extracted ==# ''
       return @/
     endif
-    return extracted->substitute(nonEscapedDelimiter, '', 'g') # \/ -> /
+    return extracted->substitute(nonEscapedDelimiter, delimiter, 'g') # \/ -> /
   enddef
 
   static def _completeSearchOptions(patternGiven: string): string
