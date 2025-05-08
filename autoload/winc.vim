@@ -53,6 +53,11 @@ class SearchState
   public var wrapscan: bool
 endclass
 
+class SearchOptions
+  public var ignoreCase: bool
+  public var magic: bool
+endclass
+
 enum CmdKind
   None,
   Others,
@@ -122,7 +127,7 @@ class Parser
     var s = CmdState.new()
     s.range1 = '%'
     s.range2 = ''
-    s.pattern = line->Parser._completeSearchOptions()
+    s.pattern = line->Parser._completeSearchOptions(CmdKind.None)
     s.command = CmdKind.None
     return s
   enddef
@@ -140,7 +145,7 @@ class Parser
       s.range1 = range1
       s.range2 = range2
       s.command = CmdKind.GetIdFromCmd(cmd)
-      s.pattern = Parser.ParseSurroundedPattern(arg)->Parser._completeSearchOptions()
+      s.pattern = Parser.ParseSurroundedPattern(arg)->Parser._completeSearchOptions(s.command)
       return s
     else
       return null_object
@@ -178,25 +183,34 @@ class Parser
     return extracted->substitute(nonEscapedDelimiter, delimiter, 'g') # \/ -> /
   enddef
 
-  static def _completeSearchOptions(patternGiven: string): string
+  static def _composeSearchOptions(pattern: string, kind: CmdKind): SearchOptions
+    var opts = SearchOptions.new()
+
+    opts.ignoreCase = &ignorecase || (&smartcase && pattern =~# '\u')
+
+    opts.magic = &magic
+    if kind == CmdKind.Smagic
+      opts.magic = true
+    elseif kind == CmdKind.Snomagic
+      opts.magic = false
+    endif
+
+    return opts
+  enddef
+
+  static def _completeSearchOptions(patternGiven: string, kind: CmdKind): string
     if !IsValidRegexp(patternGiven)
       return patternGiven
     endif
 
+    const opts = _composeSearchOptions(patternGiven, kind)
     var pattern = patternGiven
 
-    var ignoreCase = &ignorecase
-    if &smartcase
-      if pattern =~# '\u'  # TODO: Is this truely right?
-        ignoreCase = true
-      endif
-    endif
-
-    if !&magic
+    if !opts.magic
       pattern = '\M' .. pattern
     endif
 
-    if ignoreCase
+    if opts.ignoreCase
       pattern = '\c' .. pattern
     else
       pattern = '\C' .. pattern
@@ -380,7 +394,7 @@ class Winc
     var [pat, offset] = this.SeparateOffset(range)
     var line: number
     if pat ==# ''
-      line = this.Line('.')  # When range = '+3', then [pat = '', offset = '+3']
+      line = this.Line('.')  # When range is '+3', then [pat = '', offset = '+3']
     elseif pat ==# '$'
       line = this.Line('$')
     elseif pat ==# '.'
@@ -448,6 +462,8 @@ export def Internals_(): dict<any>
   return {
     GetIdFromCmd: CmdKind.GetIdFromCmd,
     SeparateCmdline: Parser.SeparateCmdline,
-    WincNew: () => Winc.new()
+    WincNew: () => Winc.new(),
+    OnCommand: Parser.OnCommand,
+    ParseSurroundedPattern: Parser.ParseSurroundedPattern,
   }
 enddef
